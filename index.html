@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NoteVault Pro — Research Intelligence</title>
+    <style>
+        /* ─── CSS Variables (Light / Dark) ─── */
+        :root {
+            --bg: #f6f7fb;
+            --surface: #ffffff;
+            --surface2: #f0f1f5;
+            --border: #d0d4dc;
+            --navy: #0f172a;
+            --navy-light: #1e293b;
+            --red: #b91c1c;
+            --red-hover: #991b1b;
+            --red-soft: #fef2f2;
+            --muted: #64748b;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --amber: #f59e0b;
+            --user-msg: #dbeafe;
+            --ai-msg: #ffffff;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.25s ease;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --serif: 'Georgia', 'Times New Roman', serif;
+            --scrollbar: #cbd5e1;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0b1120;
+            --surface: #182235;
+            --surface2: #1e2a3a;
+            --border: #334155;
+            --navy: #e2e8f0;
+            --navy-light: #cbd5e1;
+            --muted: #94a3b8;
+            --user-msg: #1e3a5f;
+            --ai-msg: #1a2744;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --scrollbar: #334155;
+            --red-soft: #2a1515;
+        }
+
+        /* ─── Reset & Base ─── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: var(--font);
+            font-size: 13px;
+            color: var(--navy);
+            background: var(--bg);
+            overflow: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar);
+            border-radius: 8px;
+        }
+
+        /* ─── Topbar ─── */
+        #topbar {
+            height: 56px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+            flex-shrink: 0;
+            backdrop-filter: blur(6px);
+            transition: background var(--transition), border var(--transition);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+        }
+        .brand-container {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .brand {
+            font-family: var(--serif);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--red);
+            letter-spacing: -0.3px;
+        }
+        .brand-tag {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 400;
+            letter-spacing: 0.2px;
+            background: var(--surface2);
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .api-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface2);
+            padding: 4px 10px 4px 14px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            transition: border var(--transition);
+        }
+        .api-wrapper:focus-within {
+            border-color: var(--red);
+        }
+        .api-input {
+            background: transparent;
+            border: none;
+            color: var(--navy);
+            padding: 5px 0;
+            width: 180px;
+            font-size: 12px;
+            outline: none;
+            font-family: var(--font);
+        }
+        .api-input::placeholder {
+            color: var(--muted);
+            opacity: 0.7;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #94a3b8;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+        .status-dot.connected {
+            background: var(--green);
+            animation: pulse 1.8s infinite;
+        }
+
+        .theme-toggle {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .theme-toggle:hover {
+            border-color: var(--red);
+        }
+        .theme-toggle .label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* ─── App Container ─── */
+        #app-container {
+            display: flex;
+            height: calc(100vh - 56px);
+            gap: 0;
+            background: var(--bg);
+            transition: background var(--transition);
+        }
+
+        /* ─── Left Sidebar ─── */
+        #left-sidebar {
+            width: 270px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            transition: background var(--transition), border var(--transition);
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface2);
+            transition: background var(--transition);
+        }
+        .sidebar-header strong {
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .sidebar-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .sidebar-actions .btn {
+            padding: 4px 10px;
+            font-size: 10px;
+        }
+
+        #docSearch {
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            transition: background var(--transition);
+        }
+        #docSearch input {
+            width: 100%;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            font-size: 12px;
+            background: var(--surface2);
+            color: var(--navy);
+            outline: none;
+            transition: border var(--transition);
+        }
+        #docSearch input:focus {
+            border-color: var(--red);
+        }
+        #docSearch input::placeholder {
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
+        #docList {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            background: var(--surface);
+            transition: background var(--transition);
+        }
+        .doc-card {
+            padding: 10px 12px;
+            background: var(--surface2);
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            transition: all var(--transition);
+        }
+        .doc-card:hover {
+            border-color: var(--border);
+            transform: translateX(2px);
+        }
+        .doc-card.active {
+            border-color: var(--red);
+            background: var(--red-soft);
+            box-shadow: 0 0 0 1px var(--red);
+        }
+        .doc-name {
+            font-weight: 600;
+            font-size: 12px;
+            word-break: break-word;
+            padding-right: 24px;
+            color: var(--navy);
+        }
+        .doc-meta {
+            font-size: 10px;
+            color: var(--muted);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .doc-meta .badge {
+            background: var(--border);
+            padding: 0 8px;
+            border-radius: 20px;
+            font-size: 9px;
+            color: var(--muted);
+        }
+        .doc-card .delete-btn {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            transition: color var(--transition);
+        }
+        .doc-card .delete-btn:hover {
+            color: var(--red);
+        }
+        .empty-docs {
+            text-align: center;
+            color: var(--muted);
+            padding: 40px 20px;
+            font-style: italic;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .empty-docs .icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* ─── Center Viewer ─── */
+        #center-viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            transition: background var(--transition);
+            min-width: 0;
+        }
+        #viewerToolbar {
+            height: 44px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            flex-shrink: 0;
+            transition: background var(--transition), border var(--transition);
+        }
+        #activeDocTitle {
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--navy);
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .toolbar-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 30px;
+            color: var(--muted);
+            transition: all var(--transition);
+        }
+        .tab-btn:hover {
+            color: var(--navy);
+            background: var(--surface2);
+        }
+        .tab-btn.active {
+            background: var(--red);
+            color: white;
+            border-color: var(--red);
+        }
+
+        /* PDF Container */
+        #pdfCanvasContainer {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 16px;
+            background: var(--bg);
+            transition: background var(--transition);
+        }
+        #pdfCanvasContainer canvas {
+            background: var(--surface);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            transition: background var(--transition);
+        }
+        .pdf-placeholder {
+            font-family: var(--serif);
+            font-size: 16px;
+            color: var(--muted);
+            margin-top: 80px;
+            text-align: center;
+            opacity: 0.6;
+        }
+        .pdf-placeholder .big-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        /* Mindmap Container */
+        #mindmapContainer {
+            display: none;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: var(--bg);
+            overflow: hidden;
+            user-select: none;
+            transition: background var(--transition);
+        }
+        .mindmap-controls {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            flex-wrap: wrap;
+            transition: background var(--transition), border var(--transition);
+        }
+        .mindmap-controls .btn {
+            padding: 3px 10px;
+            font-size: 10px;
+            border-radius: 20px;
+        }
+        #mindmapSvg {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        #mindmapSvg:active {
+            cursor: grabbing;
+        }
+
+        /* ─── Presentation Container ─── */
+        #presentationContainer {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            background: var(--bg);
+            transition: background var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .presentation-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            gap: 12px;
+            background: var(--surface);
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            align-items: center;
+        }
+        .presentation-controls .btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 30px;
+        }
+        .presentation-controls .slide-indicator {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            min-width: 60px;
+            text-align: center;
+        }
+        .presentation-slide {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 60px;
+            background: var(--surface);
+            margin: 20px 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+            transition: background var(--transition), border var(--transition);
+            overflow-y: auto;
+            text-align: left;
+            max-height: 80%;
+        }
+        .presentation-slide h2 {
+            font-family: var(--serif);
+            font-size: 28px;
+            color: var(--red);
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--red);
+            padding-bottom: 8px;
+            width: 100%;
+        }
+        .presentation-slide ul {
+            font-size: 18px;
+            line-height: 1.8;
+            list-style: disc;
+            padding-left: 30px;
+            width: 100%;
+        }
+        .presentation-slide ul li {
+            margin-bottom: 10px;
+        }
+        .presentation-slide p {
+            font-size: 18px;
+            line-height: 1.7;
+        }
+        .presentation-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--muted);
+            font-size: 16px;
+            gap: 12px;
+        }
+        .presentation-empty .big-icon {
+            font-size: 48px;
+            opacity: 0.4;
+        }
+
+        /* Print styles for PDF export */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #presentationContainer,
+            #presentationContainer * {
+                visibility: visible;
+            }
+            #presentationContainer {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: white;
+                margin: 0;
+                padding: 0;
+                display: flex !important;
+                flex-direction: column;
+            }
+            .presentation-controls,
+            .tab-btn,
+            #viewerToolbar,
+            #topbar,
+            #left-sidebar,
+            #right-sidebar,
+            .mindmap-controls {
+                display: none !important;
+            }
+            .presentation-slide {
+                page-break-after: always;
+                margin: 0;
+                border: none;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 60px 80px;
+                height: 100vh;
+                width: 100vw;
+                max-height: none;
+                background: white !important;
+                color: black !important;
+            }
+            .presentation-slide h2 {
+                color: #b91c1c !important;
+                border-bottom-color: #b91c1c !important;
+            }
+            .presentation-slide ul li {
+                color: black !important;
+            }
+        }
+
+        /* ─── Compare Container ─── */
+        #compareContainer {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            gap: 16px;
+            background: var(--bg);
+            transition: background var(--transition);
+            flex-direction: column;
+        }
+        #compareContainer .compare-toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        #compareContainer select {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--navy);
+            font-size: 12px;
+        }
+        #compareResults {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ─── Right Sidebar ─── */
+        #right-sidebar {
+            width: 370px;
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            transition: background var(--transition), border var(--transition);
+            flex-shrink: 0;
+        }
+        .panel-tab {
+            height: 44px;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--navy);
+            justify-content: space-between;
+            transition: background var(--transition);
+            flex-shrink: 0;
+        }
+        .panel-tab .badge-count {
+            background: var(--red);
+            color: white;
+            border-radius: 20px;
+            padding: 0 8px;
+            font-size: 9px;
+            line-height: 18px;
+        }
+
+        #chatArea {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 10px;
+            background: var(--bg);
+            transition: background var(--transition);
+        }
+        .msg {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            max-width: 88%;
+            line-height: 1.5;
+            font-size: 12px;
+            animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
+            border: 1px solid var(--border);
+            transition: background var(--transition), border var(--transition), color var(--transition);
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .msg-user {
+            align-self: flex-end;
+            background: var(--user-msg);
+            border-color: var(--blue);
+            color: var(--navy);
+        }
+        .msg-ai {
+            align-self: flex-start;
+            background: var(--ai-msg);
+            border-color: var(--border);
+            color: var(--navy);
+        }
+        .msg-system {
+            align-self: center;
+            background: #fef9e7;
+            border-color: #fcd34d;
+            font-size: 11px;
+            max-width: 95%;
+            color: #78350f;
+            text-align: center;
+        }
+        [data-theme="dark"] .msg-system {
+            background: #2d2416;
+            border-color: #b45309;
+            color: #fbbf24;
+        }
+        .msg-error {
+            align-self: center;
+            background: var(--red-soft);
+            border-color: var(--red);
+            color: var(--red);
+            font-weight: 500;
+        }
+
+        .msg-ai h1,
+        .msg-ai h2,
+        .msg-ai h3 {
+            font-family: var(--serif);
+            margin: 6px 0 4px 0;
+        }
+        .msg-ai h1 {
+            font-size: 15px;
+        }
+        .msg-ai h2 {
+            font-size: 14px;
+        }
+        .msg-ai h3 {
+            font-size: 13px;
+        }
+        .msg-ai ul,
+        .msg-ai ol {
+            margin: 4px 0;
+            padding-left: 20px;
+        }
+        .msg-ai code {
+            background: var(--surface2);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--red);
+        }
+        .msg-ai pre {
+            background: var(--surface2);
+            padding: 8px 12px;
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            margin: 6px 0;
+            font-size: 11px;
+        }
+        .msg-ai table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+        .msg-ai th,
+        .msg-ai td {
+            border: 1px solid var(--border);
+            padding: 5px 8px;
+            text-align: left;
+        }
+        .msg-ai th {
+            background: var(--surface2);
+            font-weight: 700;
+        }
+
+        .quick-prompts {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+            overflow-x: auto;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            scrollbar-width: none;
+            transition: background var(--transition);
+        }
+        .quick-prompts::-webkit-scrollbar {
+            display: none;
+        }
+        .prompt-chip {
+            font-size: 10px;
+            padding: 4px 12px;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            cursor: pointer;
+            white-space: nowrap;
+            background: var(--surface);
+            font-weight: 500;
+            color: var(--navy);
+            transition: all var(--transition);
+        }
+        .prompt-chip:hover {
+            background: var(--red);
+            color: white;
+            border-color: var(--red);
+        }
+
+        /* Translation row */
+        .translation-row {
+            display: flex;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .translation-row select {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--navy);
+            font-size: 11px;
+            outline: none;
+        }
+        .translation-row .btn {
+            padding: 4px 12px;
+            font-size: 10px;
+        }
+
+        .chat-input-container {
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            background: var(--surface2);
+            flex-shrink: 0;
+            transition: background var(--transition);
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        #chatInput {
+            flex: 1;
+            height: 48px;
+            resize: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-family: var(--font);
+            font-size: 12px;
+            outline: none;
+            background: var(--surface);
+            color: var(--navy);
+            transition: border var(--transition), background var(--transition);
+        }
+        #chatInput:focus {
+            border-color: var(--red);
+        }
+        #sendBtn {
+            padding: 8px 18px;
+            border: none;
+            background: var(--red);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background var(--transition);
+            white-space: nowrap;
+            height: 48px;
+        }
+        #sendBtn:hover {
+            background: var(--red-hover);
+        }
+        #sendBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ─── Spinner ─── */
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--red);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.9s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── Toast ─── */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 360px;
+        }
+        .toast {
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            font-size: 12px;
+            color: var(--navy);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(8px);
+            transition: background var(--transition), border var(--transition);
+        }
+        .toast .toast-icon {
+            font-size: 18px;
+        }
+        .toast-success .toast-icon {
+            color: var(--green);
+        }
+        .toast-error .toast-icon {
+            color: var(--red);
+        }
+        .toast-info .toast-icon {
+            color: var(--blue);
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 1200px) {
+            #right-sidebar {
+                width: 320px;
+            }
+            #left-sidebar {
+                width: 230px;
+            }
+        }
+        @media (max-width: 992px) {
+            #right-sidebar {
+                width: 280px;
+            }
+            #left-sidebar {
+                width: 200px;
+            }
+            .api-input {
+                width: 120px;
+            }
+        }
+        @media (max-width: 768px) {
+            #app-container {
+                flex-direction: column;
+                height: auto;
+                overflow-y: auto;
+            }
+            #left-sidebar,
+            #right-sidebar {
+                width: 100%;
+                border: none;
+                border-bottom: 1px solid var(--border);
+                max-height: 300px;
+            }
+            #center-viewer {
+                min-height: 500px;
+            }
+            #topbar {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 10px 16px;
+                gap: 8px;
+            }
+            .brand-tag {
+                display: none;
+            }
+            .api-wrapper {
+                width: 100%;
+            }
+            .api-input {
+                width: 100%;
+            }
+            #activeDocTitle {
+                max-width: 120px;
+            }
+        }
+
+        /* ─── Utility ─── */
+        .btn {
+            cursor: pointer;
+            padding: 4px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            font-weight: 600;
+            font-size: 11px;
+            color: var(--navy);
+            transition: all var(--transition);
+        }
+        .btn:hover {
+            background: var(--surface2);
+        }
+        .btn-red {
+            border-color: var(--red);
+            color: var(--red);
+            background: transparent;
+        }
+        .btn-red:hover {
+            background: var(--red);
+            color: white;
+        }
+        .btn-sm {
+            padding: 2px 10px;
+            font-size: 10px;
+        }
+        .flex-grow {
+            flex: 1;
+        }
+        .text-muted {
+            color: var(--muted);
+        }
+        .gap-2 {
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── TOPBAR ─── -->
+    <div id="topbar">
+        <div class="brand-container">
+            <span class="brand">NoteVault</span>
+            <span class="brand-tag">Pro · Research Intelligence</span>
+        </div>
+        <div class="topbar-actions">
+            <div class="api-wrapper">
+                <input type="password" class="api-input" id="apiKey" placeholder="Enter Gemini API key…" />
+                <div class="status-dot" id="statusDot" title="API Status"></div>
+            </div>
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                <span id="themeIcon">🌙</span>
+                <span class="label" id="themeLabel">Dark</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ─── MAIN ─── -->
+    <div id="app-container">
+
+        <!-- LEFT SIDEBAR -->
+        <div id="left-sidebar">
+            <div class="sidebar-header">
+                <strong>📄 Documents</strong>
+                <div class="sidebar-actions">
+                    <button class="btn btn-red btn-sm" onclick="document.getElementById('fileInput').click()">+ Upload</button>
+                    <input type="file" id="fileInput" multiple accept=".pdf" style="display:none" />
+                </div>
+            </div>
+            <div id="docSearch">
+                <input type="text" id="docSearchInput" placeholder="Filter documents…" oninput="filterDocList()" />
+            </div>
+            <div id="docList">
+                <div class="empty-docs">
+                    <span class="icon">📂</span>
+                    No research papers uploaded yet.<br />Drag &amp; drop or click '+ Upload'.
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER VIEWER -->
+        <div id="center-viewer">
+            <div id="viewerToolbar">
+                <span id="activeDocTitle">No Document Selected</span>
+                <div class="toolbar-tabs">
+                    <button class="tab-btn active" id="viewPdfTabBtn" onclick="switchViewerTab('pdf')">📄 Read</button>
+                    <button class="tab-btn" id="viewMindmapTabBtn" onclick="switchViewerTab('mindmap')">🌿 Mindmap</button>
+                    <button class="tab-btn" id="viewCompareTabBtn" onclick="switchViewerTab('compare')">🔁 Compare</button>
+                    <button class="tab-btn" id="viewPresentationTabBtn" onclick="switchViewerTab('presentation')">📽 Presentation</button>
+                </div>
+            </div>
+
+            <!-- PDF Viewer -->
+            <div id="pdfCanvasContainer">
+                <div class="pdf-placeholder">
+                    <span class="big-icon">📖</span>
+                    Select an uploaded document to read and analyze.
+                </div>
+            </div>
+
+            <!-- Mindmap Viewer -->
+            <div id="mindmapContainer">
+                <div class="mindmap-controls">
+                    <button class="btn" onclick="zoomMindmap(1.25)">🔍+</button>
+                    <button class="btn" onclick="zoomMindmap(0.8)">🔍−</button>
+                    <button class="btn" onclick="resetMindmapView()">↺</button>
+                    <button class="btn btn-red" onclick="triggerMindmapGeneration()">🔄 Regenerate</button>
+                    <button class="btn" onclick="exportMindmapPNG()">⬇ Export PNG</button>
+                </div>
+                <svg id="mindmapSvg">
+                    <g id="mindmapTransformG"></g>
+                </svg>
+            </div>
+
+            <!-- Compare Viewer -->
+            <div id="compareContainer">
+                <div style="font-family:var(--serif);font-size:14px;color:var(--navy);margin-bottom:12px;font-weight:700;">📊 Document Comparison</div>
+                <div class="compare-toolbar">
+                    <select id="compareDocA"><option value="">— Select Doc A —</option></select>
+                    <select id="compareDocB"><option value="">— Select Doc B —</option></select>
+                    <button class="btn btn-red" onclick="runComparison()">🔍 Compare</button>
+                </div>
+                <div id="compareResults">
+                    <div style="color:var(--muted);font-size:12px;text-align:center;padding:30px 0;">
+                        Select two documents and click Compare to see a side‑by‑side analysis.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Presentation Viewer -->
+            <div id="presentationContainer">
+                <div class="presentation-empty" id="presentationEmpty">
+                    <span class="big-icon">📽</span>
+                    <span>Select a document and generate a presentation.</span>
+                    <button class="btn btn-red" onclick="generatePresentation()">✨ Generate Presentation</button>
+                </div>
+                <div id="presentationSlides" style="display:none;flex:1;flex-direction:column;position:relative;">
+                    <div id="slideContent" class="presentation-slide"></div>
+                    <div class="presentation-controls">
+                        <button class="btn" onclick="prevSlide()">◀</button>
+                        <span class="slide-indicator" id="slideIndicator">1 / 1</span>
+                        <button class="btn" onclick="nextSlide()">▶</button>
+                        <button class="btn btn-red" onclick="downloadPresentationPDF()">⬇ PDF</button>
+                        <button class="btn" onclick="regeneratePresentation()">🔄 Regenerate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div id="right-sidebar">
+            <div class="panel-tab">
+                <span>🤖 Research Assistant</span>
+                <span class="badge-count" id="chatCount">0</span>
+            </div>
+
+            <div id="chatArea">
+                <div class="msg msg-system">
+                    <strong>NoteVault Pro ready.</strong> Upload academic papers, generate mindmaps, compare documents, and ask analytical questions. <br />📌 <em>Cite pages · Cross‑reference · Generic queries supported.</em>
+                </div>
+            </div>
+
+            <div class="quick-prompts">
+                <span class="prompt-chip" onclick="setChatPrompt('Summarize the document.')">Summarize</span>
+                <span class="prompt-chip" onclick="setChatPrompt('What is the research methodology?')">Methodology</span>
+                <span class="prompt-chip" onclick="setChatPrompt('List the main limitations.')">Limitations</span>
+                <span class="prompt-chip" onclick="setChatPrompt('Extract key contributions.')">Contributions</span>
+                <span class="prompt-chip" onclick="setChatPrompt('Compare the two documents.')">Compare</span>
+                <span class="prompt-chip" onclick="exportChat()">📥 Export Chat</span>
+            </div>
+
+            <!-- Translation Row -->
+            <div class="translation-row">
+                <select id="langSelect">
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ar">Arabic</option>
+                    <option value="en">English</option>
+                </select>
+                <button class="btn btn-red" onclick="translateLastResponse()">🌐 Translate</button>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input-row">
+                    <textarea id="chatInput" placeholder="Ask about documents or generic questions…" rows="2"></textarea>
+                    <button id="sendBtn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── TOAST CONTAINER ─── -->
+    <div id="toast-container"></div>
+
+    <!-- ─── SCRIPTS ─── -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js">
+    </script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // ─── STATE ───
+        const state = {
+            apiKey: '',
+            documents: [], // { id, name, size, arrayBuffer, fullText, pages, mindmap, presentation, uploadDate }
+            activeDocId: null,
+            chatHistory: [], // { role, text }
+            currentTab: 'pdf', // 'pdf' | 'mindmap' | 'compare' | 'presentation'
+            presentation: null, // { slides: [{title, bullets}] }
+            currentSlide: 0,
+        };
+
+        // ─── ZOOM / PAN ───
+        let panX = 100,
+            panY = 150,
+            scale = 0.9;
+        let isDragging = false;
+        let startX, startY;
+
+        // ─── DOM REFS ───
+        const $ = id => document.getElementById(id);
+        const chatArea = $('chatArea');
+        const docList = $('docList');
+        const pdfContainer = $('pdfCanvasContainer');
+        const mindmapContainer = $('mindmapContainer');
+        const compareContainer = $('compareContainer');
+        const presentationContainer = $('presentationContainer');
+        const presentationEmpty = $('presentationEmpty');
+        const presentationSlides = $('presentationSlides');
+        const slideContent = $('slideContent');
+        const slideIndicator = $('slideIndicator');
+        const activeDocTitle = $('activeDocTitle');
+        const chatInput = $('chatInput');
+        const sendBtn = $('sendBtn');
+        const apiKeyInput = $('apiKey');
+        const statusDot = $('statusDot');
+        const themeToggle = $('themeToggle');
+        const themeIcon = $('themeIcon');
+        const themeLabel = $('themeLabel');
+        const docSearchInput = $('docSearchInput');
+        const chatCount = $('chatCount');
+
+        // ─── THEME ───
+        let darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const storedTheme = localStorage.getItem('notevault-theme');
+        if (storedTheme === 'dark') darkMode = true;
+        if (storedTheme === 'light') darkMode = false;
+        applyTheme();
+
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+            themeIcon.textContent = darkMode ? '☀️' : '🌙';
+            themeLabel.textContent = darkMode ? 'Light' : 'Dark';
+            localStorage.setItem('notevault-theme', darkMode ? 'dark' : 'light');
+        }
+        themeToggle.addEventListener('click', () => {
+            darkMode = !darkMode;
+            applyTheme();
+        });
+
+        // ─── API KEY ───
+        apiKeyInput.addEventListener('input', (e) => {
+            state.apiKey = e.target.value.trim();
+            statusDot.classList.toggle('connected', state.apiKey.length > 10);
+        });
+
+        // ─── TOASTS ───
+        function toast(message, type = 'info', duration = 3500) {
+            const container = $('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            el.innerHTML = `<span class="toast-icon">${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(12px)';
+                setTimeout(() => el.remove(), 300);
+            }, duration);
+        }
+
+        // ─── FILE HANDLING ───
+        ['dragenter', 'dragover'].forEach(ev => {
+            window.addEventListener(ev, e => { e.preventDefault();
+                e.stopPropagation(); }, false);
+        });
+        window.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.dataTransfer.files.length) {
+                await processUploadedFiles(e.dataTransfer.files);
+            }
+        });
+        $('fileInput').addEventListener('change', async (e) => {
+            if (e.target.files.length) {
+                await processUploadedFiles(e.target.files);
+                e.target.value = '';
+            }
+        });
+
+        async function processUploadedFiles(fileList) {
+            for (const file of fileList) {
+                if (!file.name.endsWith('.pdf')) {
+                    toast(`"${file.name}" is not a PDF. Skipped.`, 'error');
+                    continue;
+                }
+                toast(`Ingesting "${file.name}"…`, 'info', 2000);
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer.slice(0) }).promise;
+                    let fullText = '';
+                    const pages = [];
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textObj = await page.getTextContent();
+                        const pageText = textObj.items.map(item => item.str).join(' ');
+                        pages.push({ number: i, text: pageText });
+                        fullText += `\n\n--- [Page ${i}] ---\n${pageText}`;
+                    }
+                    const newDoc = {
+                        id: crypto.randomUUID(),
+                        name: file.name,
+                        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                        arrayBuffer: arrayBuffer,
+                        fullText: fullText,
+                        pages: pages,
+                        mindmap: null,
+                        presentation: null,
+                        uploadDate: new Date().toISOString(),
+                        pageCount: pdf.numPages,
+                    };
+                    state.documents.push(newDoc);
+                    renderDocList();
+                    await selectDoc(newDoc.id);
+                    toast(`"${file.name}" ready (${pdf.numPages} pages).`, 'success');
+                } catch (err) {
+                    toast(`Failed to parse "${file.name}": ${err.message}`, 'error');
+                }
+            }
+            updateCompareSelects();
+        }
+
+        // ─── DOC LIST ───
+        function renderDocList(filter = '') {
+            const q = filter.toLowerCase().trim();
+            const filtered = state.documents.filter(d => d.name.toLowerCase().includes(q));
+            if (filtered.length === 0) {
+                docList.innerHTML = `<div class="empty-docs"><span class="icon">📂</span>${state.documents.length === 0 ? 'No papers uploaded yet.' : 'No matching documents.'}</div>`;
+                return;
+            }
+            docList.innerHTML = filtered.map(doc => {
+                const isActive = doc.id === state.activeDocId ? 'active' : '';
+                return `
+                    <div class="doc-card ${isActive}" onclick="selectDoc('${doc.id}')">
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteDoc('${doc.id}')">&times;</button>
+                        <span class="doc-name">${doc.name}</span>
+                        <span class="doc-meta">
+                            ${doc.size} · ${doc.pageCount || '?'} pages
+                            <span class="badge">${new Date(doc.uploadDate).toLocaleDateString()}</span>
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterDocList() {
+            renderDocList(docSearchInput.value);
+        }
+
+        async function deleteDoc(id) {
+            state.documents = state.documents.filter(d => d.id !== id);
+            if (state.activeDocId === id) {
+                state.activeDocId = null;
+                activeDocTitle.textContent = 'No Document Selected';
+                pdfContainer.innerHTML =
+                    `<div class="pdf-placeholder"><span class="big-icon">📖</span>Select an uploaded document to read and analyze.</div>`;
+                mindmapContainer.style.display = 'none';
+                compareContainer.style.display = 'none';
+                presentationContainer.style.display = 'none';
+                pdfContainer.style.display = 'flex';
+            }
+            renderDocList();
+            updateCompareSelects();
+            toast('Document removed.', 'info');
+        }
+
+        async function selectDoc(id) {
+            state.activeDocId = id;
+            renderDocList();
+            const doc = state.documents.find(d => d.id === id);
+            if (!doc) return;
+            activeDocTitle.textContent = doc.name;
+
+            // Render PDF
+            pdfContainer.innerHTML = '<div class="spinner" style="margin:40px auto;"></div>';
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: doc.arrayBuffer.slice(0) }).promise;
+                pdfContainer.innerHTML = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({ scale: 1.2 });
+                    const canvas = document.createElement('canvas');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    const ctx = canvas.getContext('2d');
+                    pdfContainer.appendChild(canvas);
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+                }
+            } catch (err) {
+                pdfContainer.innerHTML =
+                    `<div style="color:var(--red);padding:24px;text-align:center;">Failed to render: ${err.message}</div>`;
+            }
+
+            // Show appropriate tab
+            if (state.currentTab === 'mindmap') {
+                switchViewerTab('mindmap');
+            } else if (state.currentTab === 'compare') {
+                switchViewerTab('compare');
+            } else if (state.currentTab === 'presentation') {
+                switchViewerTab('presentation');
+            } else {
+                switchViewerTab('pdf');
+            }
+            updateCompareSelects();
+        }
+
+        // ─── TAB SWITCHING ───
+        function switchViewerTab(tab) {
+            state.currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const map = { pdf: 'viewPdfTabBtn', mindmap: 'viewMindmapTabBtn', compare: 'viewCompareTabBtn',
+                presentation: 'viewPresentationTabBtn' };
+            if (map[tab]) $(map[tab]).classList.add('active');
+
+            pdfContainer.style.display = tab === 'pdf' ? 'flex' : 'none';
+            mindmapContainer.style.display = tab === 'mindmap' ? 'block' : 'none';
+            compareContainer.style.display = tab === 'compare' ? 'flex' : 'none';
+            presentationContainer.style.display = tab === 'presentation' ? 'flex' : 'none';
+
+            if (tab === 'mindmap') displayMindmapView();
+            if (tab === 'compare') updateCompareSelects();
+            if (tab === 'presentation') displayPresentationView();
+        }
+
+        // ─── MINDMAP ─── (unchanged)
+        async function displayMindmapView() {
+            const doc = state.documents.find(d => d.id === state.activeDocId);
+            if (!doc) {
+                document.getElementById('mindmapTransformG').innerHTML =
+                    `<text x="120" y="120" fill="var(--muted)" font-family="var(--serif)" font-size="14">Select a document first.</text>`;
+                return;
+            }
+            if (doc.mindmap) {
+                renderMindmap(doc.mindmap);
+            } else {
+                await triggerMindmapGeneration();
+            }
+        }
+
+        async function triggerMindmapGeneration() {
+            const doc = state.documents.find(d => d.id === state.activeDocId);
+            if (!doc) return toast('No active document.', 'error');
+            const g = document.getElementById('mindmapTransformG');
+            g.innerHTML =
+                `<text x="120" y="120" fill="var(--muted)" font-family="var(--serif)" font-size="13">🧠 Generating mindmap via Gemini…</text>`;
+
+            if (!state.apiKey) {
+                toast('Please enter a Gemini API key.', 'error');
+                doc.mindmap = generateFallbackMindmap(doc);
+                renderMindmap(doc.mindmap);
+                return;
+            }
+
+            const prompt = `You are a research paper outline agent. Analyze the paper "${doc.name}".
+            Extract the core concept (root), major categories, and details under each.
+            Return ONLY valid JSON with this exact structure:
+            {
+                "label": "Paper Title / Core",
+                "children": [
+                    {
+                        "label": "Methodology",
+                        "children": [ { "label": "Detail Node" } ]
+                    }
+                ]
+            }
+            Keep labels under 40 chars. No markdown, no explanation.`;
+
+            try {
+                const resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt + '\n\nContext:\n' + doc.fullText.substring(0,
+                                    14000) }] }],
+                            generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+                        })
+                    });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error?.message || 'API error');
+                const raw = data.candidates[0].content.parts[0].text;
+                doc.mindmap = JSON.parse(raw);
+                renderMindmap(doc.mindmap);
+                toast('Mindmap generated.', 'success');
+            } catch (err) {
+                console.error(err);
+                doc.mindmap = generateFallbackMindmap(doc);
+                renderMindmap(doc.mindmap);
+                toast('Mindmap fallback (API error).', 'error');
+            }
+        }
+
+        function generateFallbackMindmap(doc) {
+            return {
+                label: doc.name.substring(0, 30) + '…',
+                children: [
+                    { label: 'Core Objective', children: [{ label: 'Research hypothesis' }, { label: 'Primary goal' }] },
+                    { label: 'Methodology', children: [{ label: 'Data collection' }, { label: 'Analysis pipeline' }] },
+                    { label: 'Findings', children: [{ label: 'Key results' }, { label: 'Statistical significance' }] },
+                    { label: 'Limitations', children: [{ label: 'Scope constraints' }, { label: 'Future work' }] },
+                ]
+            };
+        }
+
+        function calculateHeight(node) {
+            if (!node.children || node.children.length === 0) { node.height = 50; return node.height; }
+            let h = 0;
+            node.children.forEach(c => { h += calculateHeight(c) + 16; });
+            node.height = h - 16;
+            return node.height;
+        }
+
+        function assignPositions(node, x, minY) {
+            node.width = Math.max(110, node.label.length * 7 + 20);
+            node.x = x;
+            node.y = minY + node.height / 2;
+            if (node.children && node.children.length) {
+                let cy = minY;
+                node.children.forEach(c => {
+                    assignPositions(c, x + 220, cy);
+                    cy += c.height + 16;
+                });
+            }
+        }
+
+        function renderMindmap(data) {
+            const g = document.getElementById('mindmapTransformG');
+            g.innerHTML = '';
+            if (!data) return;
+            calculateHeight(data);
+            assignPositions(data, 50, 50);
+            let nodes = '',
+                paths = '';
+
+            const colors = ['#b91c1c', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899'];
+            let depth = 0;
+
+            function traverse(node, parent) {
+                const w = node.width,
+                    h = 32;
+                const c = colors[depth % colors.length];
+                nodes += `
+                    <g transform="translate(${node.x - w/2}, ${node.y - h/2})">
+                        <rect width="${w}" height="${h}" rx="6" fill="${depth===0?'var(--red)':'var(--surface)'}" stroke="${depth===0?'var(--red)':c}" stroke-width="${depth===0?2:1.5}" />
+                        <text x="${w/2}" y="${h/2 + 4}" font-family="var(--serif)" font-size="${depth===0?13:11}" font-weight="${depth===0?700:600}" fill="${depth===0?'white':'var(--navy)'}" text-anchor="middle">${escapeHtml(node.label)}</text>
+                    </g>
+                `;
+                if (node.children) {
+                    node.children.forEach(child => {
+                        const sx = node.x + w / 2,
+                            sy = node.y;
+                        const ex = child.x - child.width / 2,
+                            ey = child.y;
+                        paths += `
+                            <path d="M ${sx} ${sy} C ${sx+50} ${sy}, ${ex-50} ${ey}, ${ex} ${ey}" fill="none" stroke="${c}" stroke-width="1.8" opacity="0.7" />
+                        `;
+                        depth++;
+                        traverse(child, node);
+                        depth--;
+                    });
+                }
+            }
+            traverse(data, null);
+            g.innerHTML = paths + nodes;
+            applyTransform();
+        }
+
+        function escapeHtml(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        // ─── MINDMAP CONTROLS ───
+        const svgEl = document.getElementById('mindmapSvg');
+        svgEl.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            svgEl.style.cursor = 'grabbing';
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+        });
+        svgEl.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            applyTransform();
+        });
+        window.addEventListener('mouseup', () => { isDragging = false;
+            svgEl.style.cursor = 'grab'; });
+        svgEl.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            scale *= e.deltaY < 0 ? 1.12 : 0.88;
+            applyTransform();
+        }, { passive: false });
+
+        function zoomMindmap(f) { scale *= f;
+            applyTransform(); }
+
+        function resetMindmapView() { panX = 100;
+            panY = 150;
+            scale = 0.9;
+            applyTransform(); }
+
+        function applyTransform() {
+            const g = document.getElementById('mindmapTransformG');
+            g.setAttribute('transform', `translate(${panX},${panY}) scale(${scale})`);
+        }
+
+        function exportMindmapPNG() {
+            const svg = document.getElementById('mindmapSvg');
+            const rect = svg.getBoundingClientRect();
+            const canvas = document.createElement('canvas');
+            canvas.width = rect.width * 2;
+            canvas.height = rect.height * 2;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = darkMode ? '#0b1120' : '#f6f7fb';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const data = new XMLSerializer().serializeToString(svg);
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const link = document.createElement('a');
+                link.download = 'mindmap.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                toast('Mindmap exported as PNG.', 'success');
+            };
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+        }
+
+        // ─── COMPARE ─── (unchanged)
+        function updateCompareSelects() {
+            const selA = $('compareDocA'),
+                selB = $('compareDocB');
+            const currentA = selA.value,
+                currentB = selB.value;
+            selA.innerHTML = '<option value="">— Select Doc A —</option>';
+            selB.innerHTML = '<option value="">— Select Doc B —</option>';
+            state.documents.forEach(d => {
+                const optA = document.createElement('option');
+                optA.value = d.id;
+                optA.textContent = d.name;
+                selA.appendChild(optA);
+                const optB = document.createElement('option');
+                optB.value = d.id;
+                optB.textContent = d.name;
+                selB.appendChild(optB);
+            });
+            if (currentA && state.documents.some(d => d.id === currentA)) selA.value = currentA;
+            if (currentB && state.documents.some(d => d.id === currentB)) selB.value = currentB;
+        }
+
+        async function runComparison() {
+            const idA = $('compareDocA').value,
+                idB = $('compareDocB').value;
+            if (!idA || !idB) return toast('Please select two documents.', 'error');
+            if (idA === idB) return toast('Please select two different documents.', 'error');
+            const docA = state.documents.find(d => d.id === idA);
+            const docB = state.documents.find(d => d.id === idB);
+            if (!docA || !docB) return toast('Document not found.', 'error');
+
+            const resultDiv = $('compareResults');
+            resultDiv.innerHTML = '<div class="spinner" style="margin:20px auto;"></div><div style="text-align:center;color:var(--muted);font-size:12px;">Analyzing differences…</div>';
+
+            if (!state.apiKey) {
+                resultDiv.innerHTML =
+                    `<div style="color:var(--red);padding:16px;border:1px solid var(--red);border-radius:var(--radius-sm);">Please enter a Gemini API key for comparison.</div>`;
+                return;
+            }
+
+            const prompt = `Compare these two research papers:
+            DOCUMENT A: "${docA.name}"
+            DOCUMENT B: "${docB.name}"
+            Provide a structured comparison covering:
+            - Research focus / core question
+            - Methodology differences
+            - Key findings
+            - Strengths and limitations
+            - Overall contribution
+            Format with clear sections and bullet points.`;
+
+            try {
+                const resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: prompt + '\n\nContext A:\n' + docA.fullText.substring(0,
+                                        8000) + '\n\nContext B:\n' + docB.fullText.substring(0, 8000) }]
+                            }],
+                            generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+                        })
+                    });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error?.message || 'API error');
+                const text = data.candidates[0].content.parts[0].text;
+                resultDiv.innerHTML =
+                    `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;font-size:12px;line-height:1.6;color:var(--navy);">${parseMarkdown(text)}</div>`;
+                toast('Comparison complete.', 'success');
+            } catch (err) {
+                resultDiv.innerHTML =
+                    `<div style="color:var(--red);padding:16px;border:1px solid var(--red);border-radius:var(--radius-sm);">${err.message}</div>`;
+                toast('Comparison failed.', 'error');
+            }
+        }
+
+        // ─── PRESENTATION ───
+        async function displayPresentationView() {
+            const doc = state.documents.find(d => d.id === state.activeDocId);
+            if (!doc) {
+                presentationEmpty.style.display = 'flex';
+                presentationSlides.style.display = 'none';
+                return;
+            }
+            if (doc.presentation) {
+                showPresentation(doc.presentation);
+            } else {
+                presentationEmpty.style.display = 'flex';
+                presentationSlides.style.display = 'none';
+            }
+        }
+
+        async function generatePresentation() {
+            const doc = state.documents.find(d => d.id === state.activeDocId);
+            if (!doc) return toast('No active document.', 'error');
+            if (!state.apiKey) return toast('Please enter a Gemini API key.', 'error');
+
+            presentationEmpty.style.display = 'none';
+            presentationSlides.style.display = 'flex';
+            slideContent.innerHTML = '<div class="spinner" style="margin:40px auto;"></div>';
+
+            const prompt = `Create a minimalistic presentation (5-7 slides) summarizing the key points of this research paper "${doc.name}".
+            Each slide should have a title and 3-5 bullet points.
+            Return ONLY valid JSON array of objects with properties: title (string) and bullets (array of strings).
+            Example: [{"title":"Introduction","bullets":["bullet1","bullet2"]}, ...]
+            Keep titles concise, bullets short (max 10 words).`;
+
+            try {
+                const resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt + '\n\nContext:\n' + doc.fullText.substring(0,
+                                    14000) }] }],
+                            generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+                        })
+                    });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error?.message || 'API error');
+                const raw = data.candidates[0].content.parts[0].text;
+                const slides = JSON.parse(raw);
+                if (!Array.isArray(slides) || slides.length === 0) throw new Error('Invalid slides format');
+                doc.presentation = { slides };
+                showPresentation(doc.presentation);
+                toast('Presentation generated.', 'success');
+            } catch (err) {
+                console.error(err);
+                // Fallback: generate simple slides from document name
+                const fallbackSlides = [
+                    { title: 'Overview', bullets: ['Research objective', 'Key contributions', 'Methodology'] },
+                    { title: 'Methodology', bullets: ['Experimental design', 'Data collection', 'Analysis'] },
+                    { title: 'Findings', bullets: ['Main results', 'Statistical significance', 'Implications'] },
+                    { title: 'Conclusion', bullets: ['Summary', 'Future work', 'Limitations'] }
+                ];
+                doc.presentation = { slides: fallbackSlides };
+                showPresentation(doc.presentation);
+                toast('Presentation generated (fallback).', 'error');
+            }
+        }
+
+        function showPresentation(presentation) {
+            state.presentation = presentation;
+            state.currentSlide = 0;
+            renderSlide(0);
+            presentationEmpty.style.display = 'none';
+            presentationSlides.style.display = 'flex';
+        }
+
+        function renderSlide(index) {
+            const slides = state.presentation.slides;
+            if (!slides || slides.length === 0) return;
+            const slide = slides[index];
+            slideContent.innerHTML = `
+                <h2>${escapeHtml(slide.title)}</h2>
+                <ul>${slide.bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}</ul>
+            `;
+            slideIndicator.textContent = `${index+1} / ${slides.length}`;
+            state.currentSlide = index;
+        }
+
+        function nextSlide() {
+            const slides = state.presentation.slides;
+            if (!slides) return;
+            const next = (state.currentSlide + 1) % slides.length;
+            renderSlide(next);
+        }
+
+        function prevSlide() {
+            const slides = state.presentation.slides;
+            if (!slides) return;
+            const prev = (state.currentSlide - 1 + slides.length) % slides.length;
+            renderSlide(prev);
+        }
+
+        function regeneratePresentation() {
+            generatePresentation();
+        }
+
+        function downloadPresentationPDF() {
+            // Use window.print() with print styles
+            window.print();
+        }
+
+        // ─── TRANSLATION ───
+        async function translateLastResponse() {
+            const langSelect = $('langSelect');
+            const targetLang = langSelect.value;
+            const langName = langSelect.options[langSelect.selectedIndex].text;
+            // Find last AI message
+            const aiMsgs = chatArea.querySelectorAll('.msg-ai');
+            if (aiMsgs.length === 0) return toast('No AI response to translate.', 'error');
+            const lastAi = aiMsgs[aiMsgs.length - 1];
+            const text = lastAi.textContent.trim();
+            if (!text) return toast('Empty message.', 'error');
+
+            if (!state.apiKey) return toast('Enter API key.', 'error');
+
+            toast(`Translating to ${langName}…`, 'info', 2000);
+            const prompt = `Translate the following text to ${langName} (${targetLang}). Keep the formatting and structure. Return only the translation.\n\nText: ${text}`;
+
+            try {
+                const resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { temperature: 0.1, maxOutputTokens: 1024 }
+                        })
+                    });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error?.message || 'API error');
+                const translation = data.candidates[0].content.parts[0].text;
+                // Append translation as a new AI message
+                chatArea.innerHTML +=
+                    `<div class="msg msg-ai" style="border-left: 3px solid var(--blue);"><strong>🌐 Translation (${langName}):</strong><br>${parseMarkdown(translation)}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight;
+                updateChatCount();
+                toast('Translation added.', 'success');
+            } catch (err) {
+                toast(`Translation failed: ${err.message}`, 'error');
+            }
+        }
+
+        // ─── CHAT ───
+        function appendSystemMessage(text) {
+            chatArea.innerHTML += `<div class="msg msg-system">${text}</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+            updateChatCount();
+        }
+
+        function appendErrorMessage(text) {
+            chatArea.innerHTML += `<div class="msg msg-error">❌ ${text}</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+            updateChatCount();
+        }
+
+        function updateChatCount() {
+            const count = chatArea.querySelectorAll('.msg').length;
+            chatCount.textContent = count;
+        }
+
+        function setChatPrompt(text) { chatInput.value = text;
+            chatInput.focus(); }
+
+        function parseMarkdown(text) {
+            let clean = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            const tableRegex = /\|(.+)\|[\r\n]+\|[\s\-\|]+\|[\r\n]+((?:\|.+\|(?:\r?\n?))+)/g;
+            clean = clean.replace(tableRegex, (match, headerRow, bodyRows) => {
+                const headers = headerRow.split('|').map(h => h.trim()).filter(Boolean);
+                const headerHtml = `<tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>`;
+                const rows = bodyRows.trim().split('\n').map(row => {
+                    const cells = row.split('|').map(c => c.trim()).filter(Boolean);
+                    if (!cells.length) return '';
+                    return `<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+                }).join('');
+                return `<table><thead>${headerHtml}</thead><tbody>${rows}</tbody></table>`;
+            });
+
+            clean = clean.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            clean = clean.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+            clean = clean.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            clean = clean.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            clean = clean.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            clean = clean.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            clean = clean.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            clean = clean.replace(/^\s*[-*]\s+(.*)$/gim, '<ul><li>$1</li></ul>');
+            clean = clean.replace(/<\/ul>\s*<ul>/g, '');
+            clean = clean.replace(/^\s*\d+\.\s+(.*)$/gim, '<ol><li>$1</li></ol>');
+            clean = clean.replace(/<\/ol>\s*<ol>/g, '');
+            clean = clean.replace(/\n/g, '<br>');
+            return clean;
+        }
+
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            if (!state.apiKey) {
+                toast('Please enter your Gemini API key.', 'error');
+                return;
+            }
+
+            chatArea.innerHTML += `<div class="msg msg-user">${text.replace(/\n/g,'<br>')}</div>`;
+            chatInput.value = '';
+            chatArea.scrollTop = chatArea.scrollHeight;
+            sendBtn.disabled = true;
+            sendBtn.textContent = '…';
+
+            const loaderId = 'loader-' + Date.now();
+            chatArea.innerHTML += `
+                <div class="msg msg-ai" id="${loaderId}">
+                    <div class="spinner" style="margin:0 0 0 0;width:20px;height:20px;"></div>
+                    <span style="font-size:10px;color:var(--muted);margin-left:8px;">Agent thinking…</span>
+                </div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            const docContext = state.documents.length ? state.documents.map(d =>
+                `--- [${d.name}] ---\n${d.fullText}`).join('\n\n') : 'No documents uploaded.';
+
+            const systemPrompt = `You are NoteVault Pro, a research intelligence agent.
+            CRITICAL RULES:
+            1. If the question references uploaded documents, cite specific pages using [Filename, Page X].
+            2. If the question is generic (academic, scientific, conceptual), answer it fully from your knowledge.
+            3. Cross-reference multiple documents when relevant.
+            4. Extract named entities, metrics, and key claims.
+
+            DOCUMENTS IN CONTEXT:
+            ${docContext}`;
+
+            try {
+                const resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [
+                                { role: 'user', parts: [{ text: systemPrompt }] },
+                                { role: 'model', parts: [{ text: 'Understood. I will cite pages and answer generically when needed.' }] },
+                                ...state.chatHistory.map(h => ({ role: h.role, parts: [{ text: h.text }] })),
+                                { role: 'user', parts: [{ text }] }
+                            ],
+                            generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+                        })
+                    });
+                const data = await resp.json();
+                const loader = document.getElementById(loaderId);
+                if (loader) loader.remove();
+                if (!resp.ok) throw new Error(data.error?.message || 'API error');
+                const aiText = data.candidates[0].content.parts[0].text;
+                chatArea.innerHTML += `<div class="msg msg-ai">${parseMarkdown(aiText)}</div>`;
+                state.chatHistory.push({ role: 'user', text }, { role: 'model', text: aiText });
+                if (state.chatHistory.length > 30) state.chatHistory = state.chatHistory.slice(-30);
+                updateChatCount();
+            } catch (err) {
+                const loader = document.getElementById(loaderId);
+                if (loader) loader.remove();
+                appendErrorMessage(err.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+        }
+
+        // ─── EXPORT CHAT ───
+        function exportChat() {
+            const msgs = chatArea.querySelectorAll('.msg');
+            if (msgs.length === 0) return toast('No chat to export.', 'info');
+            let md = '# NoteVault Chat Export\n\n';
+            msgs.forEach(m => {
+                const cls = m.className;
+                let label = 'System';
+                if (cls.includes('msg-user')) label = 'User';
+                else if (cls.includes('msg-ai')) label = 'Assistant';
+                else if (cls.includes('msg-error')) label = 'Error';
+                const text = m.textContent.trim();
+                md += `**${label}:** ${text}\n\n`;
+            });
+            const blob = new Blob([md], { type: 'text/markdown' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `chat-export-${new Date().toISOString().slice(0,10)}.md`;
+            a.click();
+            toast('Chat exported as Markdown.', 'success');
+        }
+
+        // ─── KEYBOARD SHORTCUTS ───
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                if (document.activeElement === chatInput) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            }
+            if (e.key === 'Escape') {
+                if (document.activeElement === chatInput) chatInput.blur();
+            }
+            // Arrow keys for presentation
+            if (state.currentTab === 'presentation' && state.presentation) {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    prevSlide();
+                }
+            }
+        });
+
+        // ─── INIT ───
+        updateCompareSelects();
+        updateChatCount();
+        toast('NoteVault Pro ready. Upload a PDF to begin.', 'info', 2500);
+    </script>
+</body>
+</html>
